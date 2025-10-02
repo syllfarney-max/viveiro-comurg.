@@ -11,10 +11,12 @@ services:
       - key: CONTACT_EMAIL
         sync: false
 
-  - type: static
+  - type: web
     name: viveiro-comurg-frontend
+    env: node
+    plan: free
     buildCommand: "npm install && npm run build"
-    publishPath: dist
+    startCommand: "npx serve -s dist"
     envVars:
       - key: VITE_API_URL
         value: https://viveiro-comurg-backend.onrender.com
