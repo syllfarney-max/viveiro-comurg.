@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: viveiro-comurg-backend
+    env: node
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "node server.js"
+    envVars:
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: CONTACT_EMAIL
+        sync: false
+
+  - type: static
+    name: viveiro-comurg-frontend
+    buildCommand: "npm install && npm run build"
+    publishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://viveiro-comurg-backend.onrender.com
