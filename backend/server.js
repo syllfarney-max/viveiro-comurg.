@@ -1,30 +1,21 @@
 import express from "express";
 import cors from "cors";
-import bodyParser from "body-parser";
-import sendgrid from "@sendgrid/mail";
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
-
-app.post("/contact", async (req, res) => {
-  const { name, email, message } = req.body;
-
-  try {
-    await sendgrid.send({
-      to: process.env.CONTACT_EMAIL,
-      from: process.env.CONTACT_EMAIL,
-      subject: `Mensagem de ${name}`,
-      text: `Email: ${email}\n\nMensagem:\n${message}`,
-    });
-    res.json({ success: true });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, error: "Erro ao enviar mensagem." });
-  }
+// rota principal (corrigido)
+app.get("/", (req, res) => {
+  res.json({ message: "Backend do Viveiro Comurg está rodando 🚀" });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Backend rodando na porta ${PORT}`));
+// rota do formulário
+app.post("/contato", (req, res) => {
+  res.json({ success: true, data: req.body });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
