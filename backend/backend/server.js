@@ -4,29 +4,39 @@ import bodyParser from "body-parser";
 import sgMail from "@sendgrid/mail";
 
 const app = express();
+const PORT = process.env.PORT || 3001;
+
 app.use(cors());
 app.use(bodyParser.json());
 
+// Configuração do SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+// Rota raiz para checar status
+app.get("/", (req, res) => {
+  res.send("✅ Backend está rodando!");
+});
+
+// Rota de contato
 app.post("/api/contact", async (req, res) => {
   const { name, email, message } = req.body;
-
-  const msg = {
-    to: process.env.CONTACT_EMAIL || "syllfarney@hotmail.com",
-    from: "syllfarney@hotmail.com",
-    subject: `Novo contato de ${name}`,
-    text: `Email: ${email}\nMensagem: ${message}`,
-  };
-
   try {
-    await sgMail.send(msg);
-    res.status(200).json({ success: true, message: "Mensagem enviada com sucesso!" });
+    await sgMail.send({
+      to: process.env.CONTACT_EMAIL,
+      from: process.env.CONTACT_EMAIL, // remetente único verificado
+      subject: `Nova mensagem de ${name}`,
+      text: `Email: ${email}
+
+Mensagem:
+${message}`,
+    });
+    res.json({ success: true, message: "Mensagem enviada com sucesso!" });
   } catch (error) {
-    console.error("Erro ao enviar email:", error);
-    res.status(500).json({ success: false, message: "Erro ao enviar mensagem." });
+    console.error("Erro no envio:", error.response?.body || error);
+    res.status(500).json({ success: false, error: "Erro ao enviar mensagem." });
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+});
