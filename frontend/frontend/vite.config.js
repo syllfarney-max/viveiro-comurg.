@@ -4,7 +4,13 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: ["*"],
-    port: 5173
+    port: 5173,
+    host: "0.0.0.0",
+    allowedHosts: [
+      "localhost",
+      "127.0.0.1",
+      "viveiro-comurg-frontend.onrender.com",
+      "viveiro-comurg-frontend-jrpv.onrender.com"
+    ]
   }
 });
