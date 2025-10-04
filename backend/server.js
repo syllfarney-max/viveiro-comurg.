@@ -8,24 +8,25 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-app.use(cors()); // permite requisições de qualquer origem enquanto debugamos
+app.use(cors());
 app.use(bodyParser.json());
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || ""); // NÃO imprima a chave
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
 
-// Endpoint de DEBUG (não retorna a API key)
+// Endpoint de debug (checar variáveis de ambiente)
 app.get("/debug", (req, res) => {
   res.json({
     contactEmail: process.env.CONTACT_EMAIL || null,
     sendGridKeySet: !!process.env.SENDGRID_API_KEY,
-    debugEmail: process.env.DEBUG_EMAIL === "true" ? true : false,
+    debugEmail: process.env.DEBUG_EMAIL === "true",
   });
 });
 
-// handler único para envio (usado por /send e /api/contact)
+// Função para envio de emails
 async function sendHandler(req, res) {
-  console.log(">>> Incoming request headers:", req.headers);
-  console.log(">>> Incoming request body:", req.body);
+  console.log("📩 Requisição recebida em /send ou /api/contact");
+  console.log("Headers:", req.headers);
+  console.log("Body:", req.body);
 
   const { name, email, message } = req.body;
   if (!name || !email || !message) {
@@ -34,7 +35,7 @@ async function sendHandler(req, res) {
 
   const msg = {
     to: process.env.CONTACT_EMAIL,
-    from: process.env.CONTACT_EMAIL, // OBRIGATÓRIO: email verificado no SendGrid
+    from: process.env.CONTACT_EMAIL, // precisa ser verificado no SendGrid
     subject: `Mensagem do site - ${name}`,
     text: `Nome: ${name}\nEmail: ${email}\n\n${message}`,
     html: `<p><strong>Nome:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p>${message}</p>`,
@@ -43,14 +44,12 @@ async function sendHandler(req, res) {
 
   try {
     const response = await sgMail.send(msg);
-    console.log("SendGrid accepted response (summary):", Array.isArray(response) ? response[0]?.statusCode : response?.status);
+    console.log("✅ SendGrid resposta:", response[0]?.statusCode);
     return res.json({ success: true, message: "Mensagem enviada com sucesso!" });
   } catch (err) {
-    // log completo no servidor (útil)
-    console.error("SendGrid error (full):", err.response?.body ?? err);
+    console.error("❌ Erro SendGrid:", err.response?.body ?? err);
 
     if (process.env.DEBUG_EMAIL === "true") {
-      // retornar detalhes para eu poder interpretar (temporário)
       return res.status(500).json({
         success: false,
         error: "Erro ao enviar mensagem (DEBUG).",
@@ -62,11 +61,16 @@ async function sendHandler(req, res) {
   }
 }
 
+// Rotas principais
 app.post("/send", sendHandler);
 app.post("/api/contact", sendHandler);
 
-app.get("/", (req, res) => res.send("Backend do Viveiro Comurg rodando!"));
+// Home
+app.get("/", (req, res) => res.send("✅ Backend do Viveiro Comurg rodando!"));
 
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+// Start server
+app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+
+
 
 
