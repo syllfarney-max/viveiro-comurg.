@@ -1,11 +1,12 @@
-// frontend/src/components/ContactForm.jsx
 import React, { useState } from "react";
 
 export default function ContactForm() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState("");
 
-  const API_BASE = import.meta.env.VITE_API_URL || ""; // *** BUILT AT BUILD-TIME ***
+  // IMPORTANTE: VITE_API_URL é injetada no build. Se estiver vazia neste build,
+  // o fallback abaixo usa a URL que você já informou.
+  const API_BASE = import.meta.env.VITE_API_URL || "https://viveiro-comurg-backend-34cj.onrender.com";
 
   const handleChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -14,7 +15,6 @@ export default function ContactForm() {
     setStatus("Enviando...");
     console.log("DEBUG: API_BASE =", API_BASE);
 
-    // Endpoints testados (tenta primeiro /send, depois /api/contact)
     const endpoints = [
       `${API_BASE}/send`,
       `${API_BASE}/api/contact`,
@@ -29,12 +29,12 @@ export default function ContactForm() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
+
         const text = await res.text();
-        // tenta parse se for JSON
         let data;
         try { data = JSON.parse(text); } catch { data = { raw: text }; }
 
-        console.log("Resposta do servidor:", res.status, data);
+        console.log("Resposta do servidor (status):", res.status, "body:", data);
 
         if (res.ok && data.success) {
           setStatus("✅ Mensagem enviada com sucesso!");
@@ -42,7 +42,6 @@ export default function ContactForm() {
           return;
         } else {
           lastError = { url, status: res.status, data };
-          // continua tentando próximo endpoint
         }
       } catch (err) {
         console.error("Erro ao chamar", url, err);
@@ -50,9 +49,8 @@ export default function ContactForm() {
       }
     }
 
-    // se chegou aqui, falhou em todos
     console.error("Falha em todos endpoints testados:", lastError);
-    setStatus("❌ Erro ao enviar mensagem. Veja console para detalhes.");
+    setStatus("❌ Erro ao enviar mensagem. Veja console (F12) e cole aqui a saída.");
   };
 
   return (
